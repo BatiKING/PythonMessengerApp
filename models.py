@@ -33,7 +33,6 @@ class User:
             values = (self.username, self.hashed_password)
             cursor.execute(sql, values)
             self._id = cursor.fetchone()[0]
-            print(self._id)
             cursor.close()
             return True
         else:
@@ -113,7 +112,6 @@ class Message:
             values = (self.from_id, self.to_id, self.text)
             cursor.execute(sql, values)
             self._id = cursor.fetchone()[0]
-            print(self._id)
             cursor.close()
             return True
         else:
@@ -128,6 +126,22 @@ class Message:
         sql = "SELECT id, from_id, to_id, creation_date, text FROM messages"
         messages = []
         cursor.execute(sql)
+        for row in cursor.fetchall():
+            id_, from_id, to_id, creation_date, text = row
+            loaded_message = Message()
+            loaded_message._id = id_
+            loaded_message.from_id = from_id
+            loaded_message.to_id = to_id
+            loaded_message.creation_date = creation_date
+            loaded_message.text = text
+            messages.append(loaded_message)
+        return messages
+
+    @staticmethod
+    def load_user_messages(cursor, username):
+        sql = "SELECT id, from_id, to_id, creation_date, text FROM messages WHERE to_id=%s"
+        messages = []
+        cursor.execute(sql, (username,))
         for row in cursor.fetchall():
             id_, from_id, to_id, creation_date, text = row
             loaded_message = Message()
