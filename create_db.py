@@ -17,7 +17,6 @@ try:
         except ProgrammingError as e:
             print(e)
 
-
 except (ProgrammingError, psycopg2.OperationalError) as e:
     conn = None
     print(f"connection failed with error {e}")

@@ -32,7 +32,7 @@ class User:
                             VALUES(%s, %s) RETURNING id"""
             values = (self.username, self.hashed_password)
             cursor.execute(sql, values)
-            self._id = cursor.fetchone()['id']
+            self._id = cursor.fetchone()[0]
             print(self._id)
             cursor.close()
             return True
@@ -95,15 +95,60 @@ class User:
 
 
 class Message:
-    def __init__(self, from_id, to_id, text):
+    def __init__(self, from_id='', to_id='', text=''):
         self._id = -1
         self.from_id = from_id
         self.to_id = to_id
         self.text = text
         self.creation_date = None
 
+    @property
+    def id(self):
+        return self._id
+
+    def save_to_db(self, cursor):
+        if self._id == -1:
+            sql = """INSERT INTO messages(from_id, to_id, text)
+                            VALUES(%s, %s, %s) RETURNING id"""
+            values = (self.from_id, self.to_id, self.text)
+            cursor.execute(sql, values)
+            self._id = cursor.fetchone()[0]
+            print(self._id)
+            cursor.close()
+            return True
+        else:
+            sql = """UPDATE messages SET from_id=%s, to_id=%s, text=%s WHERE id=%s"""
+            values = (self.from_id, self.to_id, self.text, self.id)
+            cursor.execute(sql, values)
+            cursor.close()
+            return True
+
+    @staticmethod
+    def load_all_messages(cursor):
+        sql = "SELECT id, from_id, to_id, creation_date, text FROM messages"
+        messages = []
+        cursor.execute(sql)
+        for row in cursor.fetchall():
+            id_, from_id, to_id, creation_date, text = row
+            loaded_message = Message()
+            loaded_message._id = id_
+            loaded_message.from_id = from_id
+            loaded_message.to_id = to_id
+            loaded_message.creation_date = creation_date
+            loaded_message.text = text
+            messages.append(loaded_message)
+        return messages
+
+
 if __name__ == '__main__':
     conn = Connection()
+
+    # create message example
+    ms = Message(17, 15, "Siemano")
+    ms.save_to_db(conn.get_cursor())
+    msgs = Message.load_all_messages(conn.get_cursor())
+    msgs[0].text = 'Zmieniam wiadomosc'
+    msgs[0].save_to_db(conn.get_cursor())
 
     # create user example
     # us = User('Bati', 'dzikus')
@@ -133,5 +178,5 @@ if __name__ == '__main__':
     #     user1.delete(conn.get_cursor())
     # else:
     #     print("no such user")
-
-    conn.close()
+    if conn:
+        conn.close()

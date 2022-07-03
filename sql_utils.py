@@ -1,4 +1,4 @@
-from psycopg2 import connect, ProgrammingError, Error
+from psycopg2 import connect, ProgrammingError, Error, errors
 # from psycopg2.extras import RealDictCursor
 
 USER = "postgres"
